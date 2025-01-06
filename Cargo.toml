@@ -1,0 +1,7 @@
+[package]
+name = "web_spf"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+spf = "0.3.0"
