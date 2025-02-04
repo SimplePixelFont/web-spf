@@ -61,99 +61,107 @@
                 .then(bytes => WebAssembly.instantiate(bytes, importObject))
                 .then(results => {
                     exports = results.instance.exports;
+                    spf_init();
                 }
             );
 
+            function spf_init() {
+                // Create a class for the element
+                class MyCustomElement extends HTMLElement {
+                    static observedAttributes = ["text", "r", "g", "b", "scale"];
 
-            // Create a class for the element
-            class MyCustomElement extends HTMLElement {
-                static observedAttributes = ["text", "r", "g", "b", "scale"];
-
-                constructor() {
-                    super();
-                }
-
-                connectedCallback() {
-                    const img = document.createElement('img');
-                    this.appendChild(img);
-                }
-
-                disconnectedCallback() {
-                }
-
-                adoptedCallback() {
-                }
-
-                attributeChangedCallback(name, oldValue, newValue) {
-                    const textEncoder = new TextEncoder();
-                    const stringToPass = this.getAttribute("text");
-                    const encodedString = textEncoder.encode(stringToPass + "\0");
-
-                    const memory = exports.memory
-                    const memoryBuffer = new Uint8Array(memory.buffer);
-                    memoryBuffer.set(encodedString, 0);
-
-                    let r = Number(this.getAttribute("r"));
-                    let g = Number(this.getAttribute("g"));
-                    let b = Number(this.getAttribute("b"));
-
-                    let address = exports.get_texture(memoryBuffer.byteOffset, r, g, b);
-
-                    let data = new Uint8Array(exports.memory.buffer, address, exports.get_len());
-
-                    const canvas = document.createElement('canvas');
-                    const ctx = canvas.getContext('2d');
-
-                    canvas.width = data.length/(6*4);
-                    canvas.height = 6;
-
-                    const imageData = ctx.createImageData(canvas.width, canvas.height);
-
-                    for (let i = 0; i < imageData.data.length; i += 1) {
-                        imageData.data[i] = data[i];
+                    constructor() {
+                        super();
                     }
 
-                    ctx.putImageData(imageData, 0, 0);
+                    connectedCallback() {
+                        const img = document.createElement('img');
+                        this.appendChild(img);
+                    }
 
-                    const canvas2 = document.createElement("canvas");
-                    const context2 = canvas2.getContext("2d");
+                    disconnectedCallback() {
+                    }
 
-                    canvas2.width = canvas.width*this.getAttribute("scale");
-                    canvas2.height = canvas.height*this.getAttribute("scale");
+                    adoptedCallback() {
+                    }
 
-                    context2.imageSmoothingEnabled = false;
-                    context2.drawImage(canvas, 0, 0, canvas2.width, canvas2.height);
+                    attributeChangedCallback(name, oldValue, newValue) {
+                        // ensures the text has an image child
+                        if (this.children.length == 0) {
+                            const img = document.createElement('img');
+                            this.appendChild(img);
+                        }
+                        const textEncoder = new TextEncoder();
+                        const stringToPass = this.getAttribute("text");
+                        const encodedString = textEncoder.encode(stringToPass + "\0");
 
-                    this.children[0].src = canvas2.toDataURL();
+                        const memory = exports.memory
+                        const memoryBuffer = new Uint8Array(memory.buffer);
+                        memoryBuffer.set(encodedString, 0);
+
+                        let r = Number(this.getAttribute("r"));
+                        let g = Number(this.getAttribute("g"));
+                        let b = Number(this.getAttribute("b"));
+
+                        let address = exports.get_texture(memoryBuffer.byteOffset, r, g, b);
+
+                        let data = new Uint8Array(exports.memory.buffer, address, exports.get_len());
+
+                        const canvas = document.createElement('canvas');
+                        const ctx = canvas.getContext('2d');
+
+                        canvas.width = data.length/(6*4);
+                        canvas.height = 6;
+
+                        const imageData = ctx.createImageData(canvas.width, canvas.height);
+
+                        for (let i = 0; i < imageData.data.length; i += 1) {
+                            imageData.data[i] = data[i];
+                        }
+
+                        ctx.putImageData(imageData, 0, 0);
+
+                        const canvas2 = document.createElement("canvas");
+                        const context2 = canvas2.getContext("2d");
+
+                        canvas2.width = canvas.width*this.getAttribute("scale");
+                        canvas2.height = canvas.height*this.getAttribute("scale");
+
+                        context2.imageSmoothingEnabled = false;
+                        context2.drawImage(canvas, 0, 0, canvas2.width, canvas2.height);
+
+                        this.children[0].src = canvas2.toDataURL();
+                    
+                    }
+                }
+                customElements.define("spf-text", MyCustomElement);
                 
+                
+
+
+                const input = document.getElementById("text");
+                input.addEventListener("input", updateValue);
+
+                function updateValue(e) {
+                    let texts = document.getElementsByClassName("output")[0].children;
+                    for (var i=0; i<texts.length; i++) {
+                        texts[i].setAttribute("text", e.target.value);
+                    }
                 }
-            }
 
-            customElements.define("spf-text", MyCustomElement);
-
-
-            const input = document.getElementById("text");
-            input.addEventListener("input", updateValue);
-
-            function updateValue(e) {
-                let texts = document.getElementsByClassName("output")[0].children;
-                for (var i=0; i<texts.length; i++) {
-                    texts[i].setAttribute("text", e.target.value);
-                }
-            }
-
-            const picker = document.getElementById("color");
-            picker.addEventListener("change", updateColor);
-            function updateColor(e) {
-                const color = e.target.value;
-                const r = parseInt(color.substr(1, 2), 16);
-                const g = parseInt(color.substr(3, 2), 16);
-                const b = parseInt(color.substr(5, 2), 16);
-                let texts = document.getElementsByClassName("output")[0].children;
-                for (var i=0; i<texts.length; i++) {
-                    texts[i].setAttribute("r", r);
-                    texts[i].setAttribute("g", g);
-                    texts[i].setAttribute("b", b);
+                const picker = document.getElementById("color");
+                picker.addEventListener("change", updateColor);
+                function updateColor(e) {
+                    const color = e.target.value;
+                    const r = parseInt(color.substr(1, 2), 16);
+                    const g = parseInt(color.substr(3, 2), 16);
+                    const b = parseInt(color.substr(5, 2), 16);
+                    let texts = document.getElementsByClassName("output")[0].children;
+                    for (var i=0; i<texts.length; i++) {
+                        texts[i].setAttribute("r", r);
+                        texts[i].setAttribute("g", g);
+                        texts[i].setAttribute("b", b);
+                    }
                 }
             }
 
