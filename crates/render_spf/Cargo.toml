@@ -1,0 +1,8 @@
+[package]
+name = "render_spf"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+spf = { git="https://github.com/SimplePixelFont/spf.rs.git" }
+ril = { version = "0.10.3", default-features = false, features = ["png"] }

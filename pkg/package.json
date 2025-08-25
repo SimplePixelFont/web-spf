@@ -1,0 +1,15 @@
+{
+  "name": "web_spf",
+  "type": "module",
+  "version": "0.1.0",
+  "files": [
+    "web_spf_bg.wasm",
+    "web_spf.js",
+    "web_spf.d.ts"
+  ],
+  "main": "web_spf.js",
+  "types": "web_spf.d.ts",
+  "sideEffects": [
+    "./snippets/*"
+  ]
+}
