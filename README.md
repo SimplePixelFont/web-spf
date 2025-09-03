@@ -4,7 +4,7 @@ An implementation of SimplePixelFont rendering for the web.
 
 # About
 
-`web=spf` provides a native api for loading and rendering `.spf` files in the web. The api uses HTML's custom elements to define unique spf tags. And internally uses [`render_spf`](https://github.com/The-Nice-One/web-spf/tree/main/crates/render_spf), a framework for creating textures from `.spf` text strings. You can see a live demo at the following site: [https://the-nice-one.github.io/web-spf/](https://the-nice-one.github.io/web-spf/).
+`web=spf` provides a native api for loading and rendering `.spf` files in the web. The api uses HTML's custom elements to define unique spf tags. And internally uses [`render_spf`](https://github.com/The-Nice-One/web-spf/tree/main/crates/render_spf), a framework for creating textures from `.spf` text strings. You can see a live demo at the following site: [https://simplepixelfont.github.io/web-spf/](https://simplepixelfont.github.io/web-spf/).
 
 # Usage
 
