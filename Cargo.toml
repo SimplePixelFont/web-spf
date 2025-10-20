@@ -1,7 +1,10 @@
 [package]
-name = "web_spf"
+name = "web-spf"
 version = "0.1.0"
 edition = "2021"
+description = "SimplePixelFont rendering in the browser."
+repository = "https://github.com/SimplePixelFont/web-spf"
+license = "Apache-2.0"
 
 [lib]
 crate-type = ["cdylib"]

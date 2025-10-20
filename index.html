@@ -10,6 +10,8 @@
         <div class="control" style="display: inline-block;">
             <p>Rendered Text:</p>
             <input type="text" value="Hello!" id="text">
+            <p>Letter Spacing:</p>
+            <input type="number" value=2 id="letter-spacing">
             <p>Primary Color:</p>
             <input type="color" value="#4097ea" id="primary-color">
             <p>Secondary Color:</p>
@@ -17,7 +19,7 @@
         </div>
         <p>Output:</p>
         <div class="output">
-            <spf-text style="height: 8rem;" class="bannerText">Hello!</spf-text>
+            <spf-text letter-spacing=2 style="height: 8rem;" class="bannerText">Hello!</spf-text>
         </div>
         <p>Pixel Process (Internal)</p>
         <pre><code>function pixel_process(pixel) {
@@ -29,7 +31,7 @@
     return pixel;
 }</code></pre>
     </div>
-    <script src="./web_spf.js" type="module"></script>
+    <script src="./pkg/web_spf.js" type="module"></script>
     <script>
         var primaryColor = [64, 151, 234, 255];
         var secondaryColor = [20, 118, 192, 255];
@@ -63,6 +65,17 @@
             let texts = document.getElementsByClassName("output")[0].children;
             for (var i = 0; i < texts.length; i++) {
                 texts[i].textContent = e.target.value;
+            }
+        }
+
+        const numberBox = document.getElementById("letter-spacing");
+        numberBox.addEventListener("input", updateLetterSpacing);
+
+        function updateLetterSpacing(e) {
+            let texts = document.getElementsByClassName("bannerText");
+            for (var i = 0; i < texts.length; i++) {
+                texts[i].setAttribute("letter-spacing", e.target.value);
+                texts[i].update_texture();
             }
         }
 

@@ -1,4 +1,4 @@
-import init, { loaded, load_layout_from_file, print_text } from './pkg/web_spf.js';
+//import init, { loaded, load_layout_from_file, print_text, PrintSocket } from './pkg/web_spf.js';
 
 var wasmLoaded = false;
 
@@ -30,7 +30,7 @@ class SPFFont extends HTMLElement {
 }
 
 class SPFText extends HTMLElement {
-    static observedAttributes = ["font"];
+    static observedAttributes = ["font", "letter-spacing"];
 
     update_texture() {
         if (!this.canDraw) {
@@ -46,12 +46,17 @@ class SPFText extends HTMLElement {
             this.shadowRoot.children[1].style.display = "inline";
         }
 
-        let data;
-        if (typeof this.ondraw === 'function') {
-            data = print_text(text, this.ondraw);
+        let socket = new PrintSocket();
+        socket.text = text;
+        if (this.hasAttribute("letter-spacing")) {
+            socket.letter_spacing = this.getAttribute("letter-spacing");
         } else {
-            data = print_text(text);
+            socket.letter_spacing = 1;
         }
+        if (typeof this.ondraw === 'function') {
+            socket.processor = this.ondraw;
+        }
+        let data = print_text(socket);
 
         const height = data[0];
         const texture_data = data.subarray(1);
@@ -160,7 +165,7 @@ async function loadFileAsByteArray(path) {
 }
 
 async function init_spf() {
-    await init();
+    await __wbg_init();
     await loaded();
     wasmLoaded = true;
 

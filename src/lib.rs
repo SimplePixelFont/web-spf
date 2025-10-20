@@ -1,9 +1,9 @@
+use js_sys::Array;
+use render_spf::*;
+use spf::core::*;
 use std::collections::HashMap;
 use std::sync::{OnceLock, RwLock};
-use js_sys::Array;
-use spf::core::*;
 use wasm_bindgen::prelude::*;
-use render_spf::*;
 
 #[wasm_bindgen]
 extern "C" {
@@ -28,36 +28,92 @@ pub fn loaded() -> bool {
 }
 
 #[wasm_bindgen]
-pub fn load_layout_from_file(layout_name: String, layout_bytes: Vec<u8>, default: bool) -> Result<String, String> {
+pub fn load_layout_from_file(
+    layout_name: String,
+    layout_bytes: Vec<u8>,
+    default: bool,
+) -> Result<String, String> {
     let layout = layout_from_data(layout_bytes).unwrap_throw();
-    
+
     if default {
         *DEFAULT_FONT.write().unwrap() = layout_name.clone();
     }
-    
+
     let mut cache = CharacterCache::default();
     cache.update(&layout);
-    character_cache().write().unwrap().insert(layout_name.clone(), cache);
-    font_collection().write().unwrap().insert(layout_name.clone(), layout);
+    character_cache()
+        .write()
+        .unwrap()
+        .insert(layout_name.clone(), cache);
+    font_collection()
+        .write()
+        .unwrap()
+        .insert(layout_name.clone(), layout);
 
     Ok(layout_name)
 }
 
 #[wasm_bindgen]
-pub fn print_text(text: String, processor: Option<js_sys::Function>) -> Vec<u8> {
+#[derive(Debug)]
+pub struct PrintSocket {
+    text: String,
+    letter_spacing: u8,
+    processor: Option<js_sys::Function>,
+}
+
+impl Default for PrintSocket {
+    fn default() -> Self {
+        PrintSocket {
+            text: String::from(""),
+            letter_spacing: 1,
+            processor: None,
+        }
+    }
+}
+
+#[wasm_bindgen]
+impl PrintSocket {
+    #[wasm_bindgen(constructor)]
+    pub fn new() -> PrintSocket {
+        PrintSocket::default()
+    }
+    #[wasm_bindgen(setter)]
+    pub fn set_text(&mut self, text: String) {
+        self.text = text;
+    }
+    #[wasm_bindgen(setter)]
+    pub fn set_letter_spacing(&mut self, letter_spacing: u8) {
+        self.letter_spacing = letter_spacing;
+    }
+    #[wasm_bindgen(setter)]
+    pub fn set_processor(&mut self, processor: js_sys::Function) {
+        self.processor = Some(processor);
+    }
+}
+
+#[wasm_bindgen]
+pub fn print_text(socket: PrintSocket) -> Vec<u8> {
     let print_config = PrintConfig {
-        letter_spacing: 2
+        letter_spacing: socket.letter_spacing,
     };
 
-    let surface = print_single_line(text, &print_config, &character_cache().read().unwrap().get(&DEFAULT_FONT.read().unwrap().to_string()).unwrap());
+    let surface = print_single_line(
+        socket.text,
+        &print_config,
+        character_cache()
+            .read()
+            .unwrap()
+            .get(&DEFAULT_FONT.read().unwrap().to_string())
+            .unwrap(),
+    );
     let mut texture_data = Vec::new();
     texture_data.push(surface.height() as u8);
-    
+
     let this = JsValue::null();
     for row in surface.pixels() {
         for pixel in row.iter() {
             let mut rgba = vec![pixel.r, pixel.g, pixel.b, pixel.a];
-            if let Some(func) = &processor {
+            if let Some(func) = &socket.processor {
                 let js_rgba = Array::new();
                 js_rgba.push(&JsValue::from(rgba[0]));
                 js_rgba.push(&JsValue::from(rgba[1]));
@@ -81,7 +137,7 @@ pub fn print_text(text: String, processor: Option<js_sys::Function>) -> Vec<u8> 
             // texture_data.push(pixel.g);
             // texture_data.push(pixel.b);
             // texture_data.push(pixel.a);
-        } 
+        }
     }
-    return texture_data
+    texture_data
 }

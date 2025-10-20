@@ -2,7 +2,14 @@
 /* eslint-disable */
 export function loaded(): boolean;
 export function load_layout_from_file(layout_name: string, layout_bytes: Uint8Array, _default: boolean): string;
-export function print_text(text: string, processor?: Function | null): Uint8Array;
+export function print_text(socket: PrintSocket): Uint8Array;
+export class PrintSocket {
+  free(): void;
+  constructor();
+  set text(value: string);
+  set letter_spacing(value: number);
+  set processor(value: Function);
+}
 
 export type InitInput = RequestInfo | URL | Response | BufferSource | WebAssembly.Module;
 
@@ -10,7 +17,12 @@ export interface InitOutput {
   readonly memory: WebAssembly.Memory;
   readonly loaded: () => number;
   readonly load_layout_from_file: (a: number, b: number, c: number, d: number, e: number) => [number, number, number, number];
-  readonly print_text: (a: number, b: number, c: number) => [number, number];
+  readonly __wbg_printsocket_free: (a: number, b: number) => void;
+  readonly printsocket_new: () => number;
+  readonly printsocket_set_text: (a: number, b: number, c: number) => void;
+  readonly printsocket_set_letter_spacing: (a: number, b: number) => void;
+  readonly printsocket_set_processor: (a: number, b: any) => void;
+  readonly print_text: (a: number) => [number, number];
   readonly __wbindgen_exn_store: (a: number) => void;
   readonly __externref_table_alloc: () => number;
   readonly __wbindgen_export_2: WebAssembly.Table;

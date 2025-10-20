@@ -215,22 +215,72 @@ export function load_layout_from_file(layout_name, layout_bytes, _default) {
     }
 }
 
+function _assertClass(instance, klass) {
+    if (!(instance instanceof klass)) {
+        throw new Error(`expected instance of ${klass.name}`);
+    }
+}
+
 function getArrayU8FromWasm0(ptr, len) {
     ptr = ptr >>> 0;
     return getUint8ArrayMemory0().subarray(ptr / 1, ptr / 1 + len);
 }
 /**
- * @param {string} text
- * @param {Function | null} [processor]
+ * @param {PrintSocket} socket
  * @returns {Uint8Array}
  */
-export function print_text(text, processor) {
-    const ptr0 = passStringToWasm0(text, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
-    const len0 = WASM_VECTOR_LEN;
-    const ret = wasm.print_text(ptr0, len0, isLikeNone(processor) ? 0 : addToExternrefTable0(processor));
+export function print_text(socket) {
+    _assertClass(socket, PrintSocket);
+    var ptr0 = socket.__destroy_into_raw();
+    const ret = wasm.print_text(ptr0);
     var v2 = getArrayU8FromWasm0(ret[0], ret[1]).slice();
     wasm.__wbindgen_free(ret[0], ret[1] * 1, 1);
     return v2;
+}
+
+const PrintSocketFinalization = (typeof FinalizationRegistry === 'undefined')
+    ? { register: () => {}, unregister: () => {} }
+    : new FinalizationRegistry(ptr => wasm.__wbg_printsocket_free(ptr >>> 0, 1));
+
+export class PrintSocket {
+
+    __destroy_into_raw() {
+        const ptr = this.__wbg_ptr;
+        this.__wbg_ptr = 0;
+        PrintSocketFinalization.unregister(this);
+        return ptr;
+    }
+
+    free() {
+        const ptr = this.__destroy_into_raw();
+        wasm.__wbg_printsocket_free(ptr, 0);
+    }
+    constructor() {
+        const ret = wasm.printsocket_new();
+        this.__wbg_ptr = ret >>> 0;
+        PrintSocketFinalization.register(this, this.__wbg_ptr, this);
+        return this;
+    }
+    /**
+     * @param {string} text
+     */
+    set text(text) {
+        const ptr0 = passStringToWasm0(text, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+        const len0 = WASM_VECTOR_LEN;
+        wasm.printsocket_set_text(this.__wbg_ptr, ptr0, len0);
+    }
+    /**
+     * @param {number} letter_spacing
+     */
+    set letter_spacing(letter_spacing) {
+        wasm.printsocket_set_letter_spacing(this.__wbg_ptr, letter_spacing);
+    }
+    /**
+     * @param {Function} processor
+     */
+    set processor(processor) {
+        wasm.printsocket_set_processor(this.__wbg_ptr, processor);
+    }
 }
 
 async function __wbg_load(module, imports) {
@@ -391,3 +441,179 @@ async function __wbg_init(module_or_path) {
 
 export { initSync };
 export default __wbg_init;
+
+//import init, { loaded, load_layout_from_file, print_text, PrintSocket } from './pkg/web_spf.js';
+
+var wasmLoaded = false;
+
+var layoutsLoaded = [];
+var defaultLayout = null;
+
+class SPFFont extends HTMLElement {
+    static observedAttributes = ["src"];
+
+    constructor() { super(); }
+    async connectedCallback() {
+        const source = this.getAttribute("src");
+        if (source === null) {
+            return;
+        }
+        let is_default = this.hasAttribute("default");
+
+        let bytes = await loadFileAsByteArray(source);
+        const result = await load_layout_from_file(source, bytes, is_default);
+
+        layoutsLoaded.push(result);
+        if (is_default) {
+            defaultLayout = result;
+        }
+    }
+    disconnectedCallback() { }
+    adoptedCallback() { }
+    attributeChangedCallback(name, oldValue, newValue) { }
+}
+
+class SPFText extends HTMLElement {
+    static observedAttributes = ["font", "letter-spacing"];
+
+    update_texture() {
+        if (!this.canDraw) {
+            return;
+        }
+
+        const text = this.textContent;
+        if (text === '' || text === null) {
+            this.shadowRoot.children[1].src = "";
+            this.shadowRoot.children[1].style.display = "none";
+            return;
+        } else {
+            this.shadowRoot.children[1].style.display = "inline";
+        }
+
+        let socket = new PrintSocket();
+        socket.text = text;
+        if (this.hasAttribute("letter-spacing")) {
+            socket.letter_spacing = this.getAttribute("letter-spacing");
+        } else {
+            socket.letter_spacing = 1;
+        }
+        if (typeof this.ondraw === 'function') {
+            socket.processor = this.ondraw;
+        }
+        let data = print_text(socket);
+
+        const height = data[0];
+        const texture_data = data.subarray(1);
+
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+
+        canvas.width = texture_data.length / (height * 4);
+        canvas.height = height;
+
+        const imageData = ctx.createImageData(canvas.width, canvas.height);
+
+        for (let i = 0; i < imageData.data.length; i += 1) {
+            imageData.data[i] = texture_data[i];
+        }
+
+        ctx.putImageData(imageData, 0, 0);
+        this.shadowRoot.children[1].src = canvas.toDataURL();
+    }
+
+    constructor() {
+        super();
+
+        this.attachShadow({ mode: "open" });
+        this.shadowRoot.innerHTML = `
+            <style>
+                :host {
+                    display: inline-block;
+                    width: auto;
+                    height: auto;
+                }
+
+                img {
+                    width: 100%;
+                    height: 100%;
+                }
+            </style>
+            `;
+
+        this.previousTextContent = this.textContent
+        this.setupMutationObserver();
+
+        this.canDraw = false;
+    }
+
+    setupMutationObserver() {
+        this.observer = new MutationObserver((mutations) => {
+            mutations.forEach((mutation) => {
+                const content = mutation.target.textContent;
+                // Otherwise we get multiple update_texture() calls even if we
+                // if we check if mutation is equal to characterData.
+                if (content !== this.previousTextContent) {
+                    this.previousTextContent = content;
+                    this.update_texture();
+                }
+            })
+        });
+        this.observer.observe(this, {
+            childList: true,
+            subtree: false,
+            characterData: true
+        });
+    }
+
+    async connectedCallback() {
+        const img = document.createElement('img');
+        img.style.imageRendering = "pixelated";
+        this.shadowRoot.appendChild(img);
+        await waitUntilDefaultLayout();
+        this.canDraw = true;
+        this.update_texture();
+    }
+
+    disconnectedCallback() { }
+    adoptedCallback() { }
+    attributeChangedCallback(name, oldValue, newValue) { }
+}
+
+async function waitUntilDefaultLayout(timeoutMs = 5000, checkIntervalMs = 100) {
+    const startTime = Date.now();
+
+    while (Date.now() - startTime < timeoutMs) {
+        if (defaultLayout !== null) {
+            return true;
+        }
+        await new Promise(resolve => setTimeout(resolve, checkIntervalMs));
+    }
+    return false;
+}
+
+async function loadFileAsByteArray(path) {
+    try {
+        const response = await fetch(path);
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+
+        const buffer = await response.arrayBuffer();
+        const byteArray = new Uint8Array(buffer);
+
+        return byteArray;
+    } catch (error) {
+        console.error('Error loading file:', error);
+    }
+}
+
+async function init_spf() {
+    await __wbg_init();
+    await loaded();
+    wasmLoaded = true;
+
+    customElements.define("spf-font", SPFFont);
+    customElements.define("spf-text", SPFText);
+}
+init_spf()
