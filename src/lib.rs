@@ -1,25 +1,29 @@
-use js_sys::Array;
 use render_spf::*;
 use spf::core::*;
 use std::collections::HashMap;
 use std::sync::{OnceLock, RwLock};
 use wasm_bindgen::prelude::*;
 
+mod print;
+pub use print::*;
+mod badge;
+pub use badge::*;
+
 #[wasm_bindgen]
 extern "C" {
-    fn alert(s: &str);
+    pub fn alert(s: &str);
 }
 
-static FONT_COLLECTION: OnceLock<RwLock<HashMap<String, Layout>>> = OnceLock::new();
-static CHARACTER_CACHE: OnceLock<RwLock<HashMap<String, CharacterCache>>> = OnceLock::new();
-static DEFAULT_FONT: RwLock<String> = RwLock::new(String::new());
+pub static FONT_COLLECTION: OnceLock<RwLock<HashMap<String, Layout>>> = OnceLock::new();
+pub static FONT_CACHE: OnceLock<RwLock<HashMap<String, FontCache>>> = OnceLock::new();
+pub static DEFAULT_FONT: RwLock<String> = RwLock::new(String::new());
 
-fn font_collection() -> &'static RwLock<HashMap<String, Layout>> {
+pub fn font_collection() -> &'static RwLock<HashMap<String, Layout>> {
     FONT_COLLECTION.get_or_init(|| RwLock::new(HashMap::new()))
 }
 
-fn character_cache() -> &'static RwLock<HashMap<String, CharacterCache>> {
-    CHARACTER_CACHE.get_or_init(|| RwLock::new(HashMap::new()))
+pub fn font_cache() -> &'static RwLock<HashMap<String, FontCache>> {
+    FONT_CACHE.get_or_init(|| RwLock::new(HashMap::new()))
 }
 
 #[wasm_bindgen]
@@ -39,9 +43,9 @@ pub fn load_layout_from_file(
         *DEFAULT_FONT.write().unwrap() = layout_name.clone();
     }
 
-    let mut cache = CharacterCache::default();
+    let mut cache = FontCache::default();
     cache.update(&layout);
-    character_cache()
+    font_cache()
         .write()
         .unwrap()
         .insert(layout_name.clone(), cache);
@@ -54,90 +58,41 @@ pub fn load_layout_from_file(
 }
 
 #[wasm_bindgen]
-#[derive(Debug)]
-pub struct PrintSocket {
-    text: String,
-    letter_spacing: u8,
-    processor: Option<js_sys::Function>,
-}
-
-impl Default for PrintSocket {
-    fn default() -> Self {
-        PrintSocket {
-            text: String::from(""),
-            letter_spacing: 1,
-            processor: None,
-        }
-    }
+#[derive(Debug, Default)]
+pub struct Texture {
+    width: u32,
+    height: u32,
+    texture_data: Vec<u8>,
 }
 
 #[wasm_bindgen]
-impl PrintSocket {
+impl Texture {
     #[wasm_bindgen(constructor)]
-    pub fn new() -> PrintSocket {
-        PrintSocket::default()
+    pub fn new() -> Self {
+        Texture::default()
+    }
+    #[wasm_bindgen(getter)]
+    pub fn width(&self) -> u32 {
+        self.width
+    }
+    #[wasm_bindgen(getter)]
+    pub fn height(&mut self) -> u32 {
+        self.height
+    }
+    #[wasm_bindgen(getter)]
+    pub fn texture_data(&self) -> Vec<u8> {
+        self.texture_data.clone()
     }
     #[wasm_bindgen(setter)]
-    pub fn set_text(&mut self, text: String) {
-        self.text = text;
+    pub fn set_width(&mut self, width: u32) {
+        self.width = width;
     }
     #[wasm_bindgen(setter)]
-    pub fn set_letter_spacing(&mut self, letter_spacing: u8) {
-        self.letter_spacing = letter_spacing;
+    pub fn set_height(&mut self, height: u32) {
+        self.height = height;
     }
     #[wasm_bindgen(setter)]
-    pub fn set_processor(&mut self, processor: js_sys::Function) {
-        self.processor = Some(processor);
+    pub fn set_texture_data(&mut self, texture_data: Vec<u8>) {
+        self.texture_data = texture_data;
     }
-}
-
-#[wasm_bindgen]
-pub fn print_text(socket: PrintSocket) -> Vec<u8> {
-    let print_config = PrintConfig {
-        letter_spacing: socket.letter_spacing,
-    };
-
-    let surface = print_single_line(
-        socket.text,
-        &print_config,
-        character_cache()
-            .read()
-            .unwrap()
-            .get(&DEFAULT_FONT.read().unwrap().to_string())
-            .unwrap(),
-    );
-    let mut texture_data = Vec::new();
-    texture_data.push(surface.height() as u8);
-
-    let this = JsValue::null();
-    for row in surface.pixels() {
-        for pixel in row.iter() {
-            let mut rgba = vec![pixel.r, pixel.g, pixel.b, pixel.a];
-            if let Some(func) = &socket.processor {
-                let js_rgba = Array::new();
-                js_rgba.push(&JsValue::from(rgba[0]));
-                js_rgba.push(&JsValue::from(rgba[1]));
-                js_rgba.push(&JsValue::from(rgba[2]));
-                js_rgba.push(&JsValue::from(rgba[3]));
-
-                let result = func.call1(&this, &js_rgba).unwrap();
-                let js_array = Array::from(&result);
-
-                for (index, color) in rgba.iter_mut().enumerate() {
-                    let val = js_array.get(index as u32);
-                    if let Some(num) = val.as_f64() {
-                        *color = num as u8;
-                    }
-                }
-            }
-            texture_data.append(&mut rgba);
-
-            // Maybe two functions, because the following would likely be more faster.
-            // texture_data.push(pixel.r);
-            // texture_data.push(pixel.g);
-            // texture_data.push(pixel.b);
-            // texture_data.push(pixel.a);
-        }
-    }
-    texture_data
 }

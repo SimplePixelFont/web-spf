@@ -1,10 +1,11 @@
 [package]
 name = "web-spf"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 description = "SimplePixelFont rendering in the browser."
 repository = "https://github.com/SimplePixelFont/web-spf"
 license = "Apache-2.0"
+keywords = ["spf", "simplepixelfont", "wasm", "web", "rendering", "browser", "graphics", "font"]
 
 [lib]
 crate-type = ["cdylib"]
@@ -12,6 +13,8 @@ crate-type = ["cdylib"]
 [dependencies]
 spf = { git="https://github.com/SimplePixelFont/spf.rs.git" }
 render_spf = { path = "./crates/render_spf" }
+ril = { version = "0.10.3", default-features = false, features = ["all-pure"] }
 js-sys = "0.3.77"
 web-sys = "0.3.77"
 wasm-bindgen = "0.2.100"
+empfindung = "0.2.6"

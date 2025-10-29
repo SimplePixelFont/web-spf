@@ -1,22 +1,34 @@
 {
   "name": "web-spf",
-  "type": "module",
+  "version": "0.1.1",
   "description": "SimplePixelFont rendering in the browser.",
-  "version": "0.1.0",
+  "main": "./node/web_spf.js",
+  "types": "./node/web_spf.d.ts",
+  "exports": {
+    ".": {
+      "node": "./node/web_spf.js",
+      "default": "./node/web_spf.js"
+    },
+    "./web": "./web/js/dom_elements.js"
+  },
+  "files": [
+    "node",
+    "web",
+    "README.md"
+  ],
+  "keywords": [
+    "spf",
+    "simplepixelfont",
+    "wasm",
+    "web",
+    "rendering",
+    "browser",
+    "graphics",
+    "font"
+  ],
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
     "url": "https://github.com/SimplePixelFont/web-spf"
-  },
-  "files": [
-    "web_spf_bg.wasm",
-    "web_spf.js",
-    "web_spf.d.ts",
-    "LICENSE_APACHE"
-  ],
-  "main": "web_spf.js",
-  "types": "web_spf.d.ts",
-  "sideEffects": [
-    "./snippets/*"
-  ]
+  }
 }

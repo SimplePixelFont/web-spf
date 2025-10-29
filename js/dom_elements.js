@@ -1,4 +1,4 @@
-//import init, { loaded, load_layout_from_file, print_text, PrintSocket } from './pkg/web_spf.js';
+import init, { loaded, load_layout_from_file, print_text, PrintSocket, Texture, BadgeSocket, print_badge } from '../web_spf.js';
 
 var wasmLoaded = false;
 
@@ -56,15 +56,15 @@ class SPFText extends HTMLElement {
         if (typeof this.ondraw === 'function') {
             socket.processor = this.ondraw;
         }
-        let data = print_text(socket);
-
-        const height = data[0];
-        const texture_data = data.subarray(1);
+        const texture = print_text(socket);
+        const width = texture.width;
+        const height = texture.height;
+        const texture_data = texture.texture_data;
 
         const canvas = document.createElement('canvas');
         const ctx = canvas.getContext('2d');
 
-        canvas.width = texture_data.length / (height * 4);
+        canvas.width = width;
         canvas.height = height;
 
         const imageData = ctx.createImageData(canvas.width, canvas.height);
@@ -164,12 +164,80 @@ async function loadFileAsByteArray(path) {
     }
 }
 
+async function getImageRgbaBytes(imageUrl) {
+  const image = new Image();
+  image.src = imageUrl;
+  image.crossOrigin = 'anonymous';
+
+  await image.decode(); // Wait for the image to load and decode
+
+  const canvas = document.createElement('canvas');
+  const context = canvas.getContext('2d');
+
+  canvas.width = image.width;
+  canvas.height = image.height;
+
+  context.drawImage(image, 0, 0);
+
+  const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+  return [canvas.width, canvas.height, imageData.data]; // This is the Uint8ClampedArray of RGBA bytes
+}
+
 async function init_spf() {
-    await __wbg_init();
+    await init();
     await loaded();
     wasmLoaded = true;
 
     customElements.define("spf-font", SPFFont);
     customElements.define("spf-text", SPFText);
+
+    await waitUntilDefaultLayout();
+    console.log("Default layout loaded");
+    let hello_socket = new PrintSocket();
+    hello_socket.text = "BinaryBuilder";
+    hello_socket.letter_spacing = 2;
+    let world_socket = new PrintSocket();
+    world_socket.text = "Passing";
+    world_socket.letter_spacing = 2;
+
+
+    let socket = new BadgeSocket();
+    socket.label = hello_socket;
+    socket.message = world_socket;
+    socket.label_color = "#0c0c0c";
+    socket.color = "#00FF00";
+    let logo = await getImageRgbaBytes("https://raw.githubusercontent.com/The-Nice-One/GalleryArt/refs/heads/main/emojis/julia.png");
+    let logo_texture = new Texture();
+    logo_texture.width = logo[0];
+    logo_texture.height = logo[1];
+    logo_texture.texture_data = logo[2];
+    socket.logo = logo_texture;
+    const texture = print_badge(socket);
+    console.log("we good so far!");
+
+    const width = texture.width;
+    const height = texture.height;
+    const texture_data = texture.texture_data;
+
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+
+    canvas.width = width;
+    canvas.height = height;
+
+    const imageData = ctx.createImageData(canvas.width, canvas.height);
+
+    for (let i = 0; i < imageData.data.length; i += 1) {
+        imageData.data[i] = texture_data[i];
+    }
+
+    ctx.putImageData(imageData, 0, 0);
+
+    const img = document.createElement('img');
+    img.style.imageRendering = "pixelated";
+    img.src = canvas.toDataURL();
+    document.body.appendChild(img);
 }
+
 init_spf()
+export { SPFFont, SPFText };
