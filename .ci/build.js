@@ -57,6 +57,15 @@ webPackageJson.sideEffects.push("js/dom-elements.js");
 fs.writeFileSync("pkg-web/package.json", JSON.stringify(webPackageJson, null, 2));
 console.log("\n✅ Patch complete!\n");
 
+console.log('\n🗑️ Removing .gitignore from Web and Node Builds...');
+if (fs.existsSync('pkg-web/.gitignore')) {
+  fs.unlinkSync('pkg-web/.gitignore');
+}
+if (fs.existsSync('pkg-node/.gitignore')) {
+  fs.unlinkSync('pkg-node/.gitignore');
+}
+console.log('\n✅ Removal complete!\n');
+
 // Read metadata from the generated package.json (using Node.js build)
 console.log('\n📝 Extracting package metadata...');
 const nodePackageJson = JSON.parse(
