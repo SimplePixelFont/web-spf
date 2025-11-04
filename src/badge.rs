@@ -129,7 +129,7 @@ pub fn print_badge(socket: BadgeSocket) -> Texture {
         &label_texture,
     );
     surface.paste(
-        left_width + socket.padding * 2,
+        left_width + socket.padding * 1,
         message_offset_y,
         &message_texture,
     );
