@@ -129,18 +129,18 @@ pub fn print_badge(socket: BadgeSocket) -> Texture {
         &label_texture,
     );
     surface.paste(
-        left_width + socket.padding * 1,
+        left_width + socket.padding,
         message_offset_y,
         &message_texture,
     );
 
-    if surface.height() <= 8 {
+    if surface.height() <= 9 {
         surface.resize(
             surface.width() * 3,
             surface.height() * 3,
             ResizeAlgorithm::Nearest,
         );
-    } else if surface.height() <= 12 {
+    } else if surface.height() <= 14 {
         surface.resize(
             surface.width() * 2,
             surface.height() * 2,
