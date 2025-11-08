@@ -69,13 +69,7 @@ pub fn print_badge(socket: BadgeSocket) -> Texture {
     let left_width = label.width + logo.width + socket.padding * 3;
     let right_width = message.width + socket.padding * 2;
 
-    let mut texture = Texture {
-        width: badge_width,
-        height: badge_height,
-        texture_data: Vec::new(),
-    };
-
-    let mut surface = Image::new(texture.width, texture.height, Rgba::transparent())
+    let mut surface = Image::new(badge_width, badge_height, Rgba::transparent())
         .with_overlay_mode(OverlayMode::Merge);
     let label_rectangle = Rectangle::at(0, 0)
         .with_size(left_width, badge_height)
@@ -147,6 +141,12 @@ pub fn print_badge(socket: BadgeSocket) -> Texture {
             ResizeAlgorithm::Nearest,
         );
     }
+
+    let mut texture = Texture {
+        width: surface.width(),
+        height: surface.height(),
+        texture_data: Vec::new(),
+    };
 
     for row in surface.pixels() {
         for pixel in row.iter() {

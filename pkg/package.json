@@ -1,6 +1,6 @@
 {
   "name": "web-spf",
-  "version": "0.1.6",
+  "version": "0.1.7",
   "description": "SimplePixelFont rendering in the browser.",
   "main": "./node/web_spf.js",
   "types": "./node/web_spf.d.ts",
