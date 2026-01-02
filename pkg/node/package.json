@@ -1,0 +1,27 @@
+{
+  "name": "web-spf",
+  "description": "SimplePixelFont rendering in the browser.",
+  "version": "0.1.7",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/SimplePixelFont/web-spf"
+  },
+  "files": [
+    "web_spf_bg.wasm",
+    "web_spf.js",
+    "web_spf.d.ts"
+  ],
+  "main": "web_spf.js",
+  "types": "web_spf.d.ts",
+  "keywords": [
+    "spf",
+    "simplepixelfont",
+    "wasm",
+    "web",
+    "rendering",
+    "browser",
+    "graphics",
+    "font"
+  ]
+}
