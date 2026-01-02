@@ -1,3 +1,4 @@
+use bitvec::prelude::*;
 use ril::prelude::*;
 use spf::core::*;
 use std::collections::HashMap;
@@ -52,10 +53,22 @@ impl FontCache {
                 .constant_height
                 .or(pixmap.custom_height)
                 .unwrap();
+
+            let bits_per_pixel = pixmap_table
+                .constant_bits_per_pixel
+                .or(pixmap.custom_bits_per_pixel)
+                .unwrap() as usize;
+            let bits = pixmap.data.view_bits::<Lsb0>();
+            let raw_pixels: Vec<u8> = bits
+                .chunks(bits_per_pixel)
+                .map(|chunk| chunk.load_be::<u8>())
+                .take(abstract_character.width as usize * abstract_character.height as usize)
+                .collect();
+
             abstract_character.advance_x = character.advance_x.unwrap_or(abstract_character.width);
 
             let mut pixels = Vec::new();
-            for pixel in pixmap.data.iter() {
+            for pixel in raw_pixels.iter() {
                 let mut abstract_color = Rgba::transparent();
                 let color = &color_table.colors[*pixel as usize];
                 abstract_color.a = color_table.constant_alpha.or(color.custom_alpha).unwrap();

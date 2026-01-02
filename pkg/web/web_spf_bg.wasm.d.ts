@@ -25,6 +25,8 @@ export const badgesocket_set_label_color: (a: number, b: number, c: number) => v
 export const badgesocket_set_color: (a: number, b: number, c: number) => void;
 export const badgesocket_set_logo: (a: number, b: number) => void;
 export const print_badge: (a: number) => number;
+export const spf_core_layout_to_data: (a: number, b: number) => void;
+export const spf_core_layout_from_data: (a: number, b: number, c: number) => void;
 export const __wbindgen_exn_store: (a: number) => void;
 export const __externref_table_alloc: () => number;
 export const __wbindgen_export_2: WebAssembly.Table;

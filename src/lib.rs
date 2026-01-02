@@ -37,7 +37,7 @@ pub fn load_layout_from_file(
     layout_bytes: Vec<u8>,
     default: bool,
 ) -> Result<String, String> {
-    let layout = layout_from_data(layout_bytes).unwrap_throw();
+    let layout = layout_from_data(&layout_bytes).unwrap_throw();
 
     if default {
         *DEFAULT_FONT.write().unwrap() = layout_name.clone();

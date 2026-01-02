@@ -56,6 +56,8 @@ export interface InitOutput {
   readonly badgesocket_set_color: (a: number, b: number, c: number) => void;
   readonly badgesocket_set_logo: (a: number, b: number) => void;
   readonly print_badge: (a: number) => number;
+  readonly spf_core_layout_to_data: (a: number, b: number) => void;
+  readonly spf_core_layout_from_data: (a: number, b: number, c: number) => void;
   readonly __wbindgen_exn_store: (a: number) => void;
   readonly __externref_table_alloc: () => number;
   readonly __wbindgen_export_2: WebAssembly.Table;
