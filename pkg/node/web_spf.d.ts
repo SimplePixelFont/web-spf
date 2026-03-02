@@ -1,29 +1,39 @@
 /* tslint:disable */
 /* eslint-disable */
-export function print_text(socket: PrintSocket): Texture;
-export function loaded(): boolean;
-export function load_layout_from_file(layout_name: string, layout_bytes: Uint8Array, _default: boolean): string;
-export function print_badge(socket: BadgeSocket): Texture;
+
 export class BadgeSocket {
-  free(): void;
-  constructor();
-  set label(value: PrintSocket);
-  set message(value: PrintSocket);
-  set label_color(value: string);
-  set color(value: string);
-  set logo(value: Texture);
+    free(): void;
+    [Symbol.dispose](): void;
+    constructor();
+    set color(value: string);
+    set label(value: PrintSocket);
+    set label_color(value: string);
+    set logo(value: Texture);
+    set message(value: PrintSocket);
 }
+
 export class PrintSocket {
-  free(): void;
-  constructor();
-  set text(value: string);
-  set letter_spacing(value: number);
-  set processor(value: Function);
+    free(): void;
+    [Symbol.dispose](): void;
+    constructor();
+    set letter_spacing(value: number);
+    set processor(value: Function);
+    set text(value: string);
 }
+
 export class Texture {
-  free(): void;
-  constructor();
-  width: number;
-  height: number;
-  texture_data: Uint8Array;
+    free(): void;
+    [Symbol.dispose](): void;
+    constructor();
+    height: number;
+    texture_data: Uint8Array;
+    width: number;
 }
+
+export function load_layout_from_file(layout_name: string, layout_bytes: Uint8Array, _default: boolean): string;
+
+export function loaded(): boolean;
+
+export function print_badge(socket: BadgeSocket): Texture;
+
+export function print_text(socket: PrintSocket): Texture;
