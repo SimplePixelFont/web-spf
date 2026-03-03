@@ -31,7 +31,7 @@ Lastly, use the `spf-text` to render any text:
 
 # NPM installation
 
-You can [install `web-spf` with from npm](https://www.npmjs.com/package/web-spf) with the following command.
+You can [install `web-spf` from npm](https://www.npmjs.com/package/web-spf) with the following command.
 ```bash
 npm i web-spf
 ```
