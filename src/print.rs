@@ -41,21 +41,19 @@ impl PrintSocket {
 
 #[wasm_bindgen]
 pub fn print_text(socket: PrintSocket) -> Texture {
-    let print_config = PrintConfig {
+    let print_config = GenericPrintConfig {
         letter_spacing: socket.letter_spacing,
         vertical_expand: true,
         vertical_align: VerticalAlign::Middle,
     };
+    let mut map = printer_cache()
+        .write()
+        .unwrap();
+    let printer = map.get_mut(&DEFAULT_FONT.read().unwrap().to_string())
+        .unwrap();
+    printer.config = print_config.clone();
 
-    let surface = print(
-        socket.text,
-        &print_config,
-        font_cache()
-            .read()
-            .unwrap()
-            .get(&DEFAULT_FONT.read().unwrap().to_string())
-            .unwrap(),
-    );
+    let surface = printer.print_str(&socket.text);
 
     let mut texture = Texture {
         width: surface.width(),

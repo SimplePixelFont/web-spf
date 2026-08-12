@@ -11,10 +11,11 @@ keywords = ["spf", "simplepixelfont", "wasm", "web", "rendering", "browser", "gr
 crate-type = ["cdylib"]
 
 [dependencies]
-spf = { git="https://github.com/SimplePixelFont/spf.rs.git" }
-render_spf = { path = "./crates/render_spf" }
+spf = "0.9.1"
+render_spf = { git = "https://github.com/SimplePixelFont/render-spf.git" }
 ril = { version = "0.10.3", default-features = false, features = ["all-pure"] }
 js-sys = "0.3.77"
 web-sys = "0.3.77"
 wasm-bindgen = "0.2.100"
 empfindung = "0.2.6"
+rgba_simple = "0.10.0"

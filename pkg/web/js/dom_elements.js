@@ -1,4 +1,4 @@
-import init, { loaded, load_layout_from_file, print_text, PrintSocket, Texture, BadgeSocket, print_badge } from '../web_spf.js';
+import init, { loaded, load_layout_from_file, print_text, PrintSocket, Texture, BadgeSocket, print_badge, get_printer_colors, set_printer_color } from '../web_spf.js';
 
 var wasmLoaded = false;
 
@@ -23,6 +23,30 @@ class SPFFont extends HTMLElement {
         if (is_default) {
             defaultLayout = result;
         }
+
+        this.dispatchEvent(new CustomEvent('ready', {
+            bubbles: true,
+            composed: true, // Allows the event to cross the Shadow DOM boundary
+            detail: { initialized: true }
+        }));
+    }
+    colors() {
+        let colors = [];
+        const source = this.getAttribute("src");
+        const printer_colors = get_printer_colors(source);
+        for (let i = 0; i < printer_colors.length; i++) {
+            const table = printer_colors[i];
+            colors.push([]);
+            for (let j = 0; j < table.colors.length; j++) {
+                const color = table.colors[j];
+                colors[i].push(color);
+            }
+        }
+        return colors;
+    }
+    set_color(table_index, color_index, hex_color) {
+        const source = this.getAttribute("src");
+        set_printer_color(source, table_index, color_index, hex_color);
     }
     disconnectedCallback() { }
     adoptedCallback() { }
@@ -106,7 +130,7 @@ class SPFText extends HTMLElement {
         this.observer = new MutationObserver((mutations) => {
             mutations.forEach((mutation) => {
                 const content = mutation.target.textContent;
-                // Otherwise we get multiple update_texture() calls even if we
+                // Otherwise we get multiple update_texture() calls even
                 // if we check if mutation is equal to characterData.
                 if (content !== this.previousTextContent) {
                     this.previousTextContent = content;
@@ -162,25 +186,6 @@ async function loadFileAsByteArray(path) {
     } catch (error) {
         console.error('Error loading file:', error);
     }
-}
-
-async function getImageRgbaBytes(imageUrl) {
-  const image = new Image();
-  image.src = imageUrl;
-  image.crossOrigin = 'anonymous';
-
-  await image.decode(); // Wait for the image to load and decode
-
-  const canvas = document.createElement('canvas');
-  const context = canvas.getContext('2d');
-
-  canvas.width = image.width;
-  canvas.height = image.height;
-
-  context.drawImage(image, 0, 0);
-
-  const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
-  return [canvas.width, canvas.height, imageData.data]; // This is the Uint8ClampedArray of RGBA bytes
 }
 
 async function init_spf() {

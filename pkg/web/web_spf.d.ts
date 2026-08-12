@@ -21,6 +21,13 @@ export class PrintSocket {
     set text(value: string);
 }
 
+export class TableEntry {
+    private constructor();
+    free(): void;
+    [Symbol.dispose](): void;
+    colors: string[];
+}
+
 export class Texture {
     free(): void;
     [Symbol.dispose](): void;
@@ -30,6 +37,8 @@ export class Texture {
     width: number;
 }
 
+export function get_printer_colors(layout_name: string): TableEntry[];
+
 export function load_layout_from_file(layout_name: string, layout_bytes: Uint8Array, _default: boolean): string;
 
 export function loaded(): boolean;
@@ -38,43 +47,53 @@ export function print_badge(socket: BadgeSocket): Texture;
 
 export function print_text(socket: PrintSocket): Texture;
 
+export function set_printer_color(layout_name: string, table_index: number, color_index: number, hex_color: string): void;
+
 export type InitInput = RequestInfo | URL | Response | BufferSource | WebAssembly.Module;
 
 export interface InitOutput {
     readonly memory: WebAssembly.Memory;
-    readonly __wbg_badgesocket_free: (a: number, b: number) => void;
-    readonly badgesocket_new: () => number;
-    readonly badgesocket_set_label: (a: number, b: number) => void;
-    readonly badgesocket_set_message: (a: number, b: number) => void;
-    readonly badgesocket_set_label_color: (a: number, b: number, c: number) => void;
-    readonly badgesocket_set_color: (a: number, b: number, c: number) => void;
-    readonly badgesocket_set_logo: (a: number, b: number) => void;
-    readonly print_badge: (a: number) => number;
-    readonly __wbg_printsocket_free: (a: number, b: number) => void;
-    readonly printsocket_new: () => number;
-    readonly printsocket_set_text: (a: number, b: number, c: number) => void;
-    readonly printsocket_set_letter_spacing: (a: number, b: number) => void;
-    readonly printsocket_set_processor: (a: number, b: any) => void;
-    readonly print_text: (a: number) => number;
-    readonly loaded: () => number;
-    readonly load_layout_from_file: (a: number, b: number, c: number, d: number, e: number) => [number, number, number, number];
+    readonly __wbg_get_tableentry_colors: (a: number) => [number, number];
+    readonly __wbg_set_tableentry_colors: (a: number, b: number, c: number) => void;
+    readonly __wbg_tableentry_free: (a: number, b: number) => void;
     readonly __wbg_texture_free: (a: number, b: number) => void;
-    readonly texture_new: () => number;
-    readonly texture_width: (a: number) => number;
+    readonly get_printer_colors: (a: number, b: number) => [number, number];
+    readonly load_layout_from_file: (a: number, b: number, c: number, d: number, e: number) => [number, number, number, number];
+    readonly loaded: () => number;
+    readonly set_printer_color: (a: number, b: number, c: number, d: number, e: number, f: number) => void;
     readonly texture_height: (a: number) => number;
-    readonly texture_texture_data: (a: number) => [number, number];
-    readonly texture_set_width: (a: number, b: number) => void;
+    readonly texture_new: () => number;
     readonly texture_set_height: (a: number, b: number) => void;
     readonly texture_set_texture_data: (a: number, b: number, c: number) => void;
-    readonly spf_core_layout_to_data: (a: number, b: number) => void;
-    readonly spf_core_layout_from_data: (a: number, b: number, c: number) => void;
+    readonly texture_set_width: (a: number, b: number) => void;
+    readonly texture_texture_data: (a: number) => [number, number];
+    readonly texture_width: (a: number) => number;
+    readonly __wbg_badgesocket_free: (a: number, b: number) => void;
+    readonly __wbg_printsocket_free: (a: number, b: number) => void;
+    readonly badgesocket_new: () => number;
+    readonly badgesocket_set_color: (a: number, b: number, c: number) => void;
+    readonly badgesocket_set_label: (a: number, b: number) => void;
+    readonly badgesocket_set_label_color: (a: number, b: number, c: number) => void;
+    readonly badgesocket_set_logo: (a: number, b: number) => void;
+    readonly badgesocket_set_message: (a: number, b: number) => void;
+    readonly print_badge: (a: number) => number;
+    readonly print_text: (a: number) => number;
+    readonly printsocket_new: () => number;
+    readonly printsocket_set_letter_spacing: (a: number, b: number) => void;
+    readonly printsocket_set_processor: (a: number, b: any) => void;
+    readonly printsocket_set_text: (a: number, b: number, c: number) => void;
+    readonly spf_core_layout_from_data: (a: number, b: number, c: number) => number;
+    readonly spf_core_layout_to_data: (a: number, b: number) => number;
+    readonly spf_free_data: (a: number) => void;
+    readonly spf_free_layout: (a: number) => void;
     readonly __wbindgen_malloc: (a: number, b: number) => number;
     readonly __wbindgen_realloc: (a: number, b: number, c: number, d: number) => number;
     readonly __wbindgen_exn_store: (a: number) => void;
     readonly __externref_table_alloc: () => number;
     readonly __wbindgen_externrefs: WebAssembly.Table;
-    readonly __externref_table_dealloc: (a: number) => void;
+    readonly __externref_drop_slice: (a: number, b: number) => void;
     readonly __wbindgen_free: (a: number, b: number, c: number) => void;
+    readonly __externref_table_dealloc: (a: number) => void;
     readonly __wbindgen_start: () => void;
 }
 

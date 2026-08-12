@@ -1,113 +1,104 @@
 <!doctype html>
 <html>
-    <head>
-        <spf-font src="./Monogram5x8.spf" default></spf-font>
-    </head>
 
-    <body>
-        <div class="content">
-            <div class="control" style="display: inline-block">
-                <p>Rendered Text:</p>
-                <input type="text" value="Hello!" id="text" />
-                <p>Letter Spacing:</p>
-                <input type="number" value="2" id="letter-spacing" />
-                <p>Primary Color:</p>
-                <input type="color" value="#4097ea" id="primary-color" />
-                <p>Secondary Color:</p>
-                <input type="color" value="#1476c0" id="secondary-color" />
-            </div>
-            <p>Output:</p>
-            <div class="output">
-                <spf-text
-                    letter-spacing="2"
-                    style="height: 8rem"
-                    class="bannerText"
-                    >Hello!</spf-text
-                >
-            </div>
-            <p>Pixel Process (Internal)</p>
-            <pre><code>function pixel_process(pixel) {
-    if (pixel[3] == 255 && pixel[0] > 245 && pixel[1] > 245 && pixel[2] > 245) {
-        pixel = primaryColor;
-    } else if (pixel[3] == 255) {
-        pixel = secondaryColor;
-    }
+<head>
+    <spf-font id="default-font" src="./Monogram5x8.spf" default></spf-font>
+</head>
+
+<body>
+    <div class="content">
+        <div class="control" style="display: inline-block">
+            <p>Rendered Text:</p>
+            <input type="text" value="Hello!" id="text" />
+            <p>Letter Spacing:</p>
+            <input type="number" value="2" id="letter-spacing" />
+            <p>Colors:</p>
+            <div id="color-tables-div"></div>
+        </div>
+        <p>Output:</p>
+        <div class="output">
+            <spf-text letter-spacing="2" style="height: 8rem" class="bannerText">Hello!</spf-text>
+        </div>
+        <p>Pixel Process (Internal)</p>
+        <pre><code>function pixel_process(pixel) {
     return pixel;
 }</code></pre>
-        </div>
-        <script src="./pkg/web/js/dom_elements.js" type="module"></script>
-        <script>
-            var primaryColor = [64, 151, 234, 255];
-            var secondaryColor = [20, 118, 192, 255];
-
-            function areArraysEqual(arr1, arr2) {
-                if (arr1.length !== arr2.length) {
-                    return false;
-                }
-                return arr1.every((value, index) => value === arr2[index]);
+    </div>
+    <script src="./pkg/web/js/dom_elements.js" type="module"></script>
+    <script>
+        function areArraysEqual(arr1, arr2) {
+            if (arr1.length !== arr2.length) {
+                return false;
             }
+            return arr1.every((value, index) => value === arr2[index]);
+        }
 
-            function pixel_process(pixel) {
-                if (
-                    pixel[3] == 255 &&
-                    pixel[0] > 245 &&
-                    pixel[1] > 245 &&
-                    pixel[2] > 245
-                ) {
-                    pixel = primaryColor;
-                } else if (pixel[3] == 255) {
-                    pixel = secondaryColor;
-                }
-                return pixel;
+        function pixel_process(pixel) {
+            return pixel;
+        }
+        let banners = document.getElementsByClassName("bannerText");
+        for (let i = 0; i < banners.length; i++) {
+            banners[i].ondraw = pixel_process;
+        }
+
+        const input = document.getElementById("text");
+        input.addEventListener("input", updateValue);
+
+        function updateValue(e) {
+            let texts =
+                document.getElementsByClassName("output")[0].children;
+            for (var i = 0; i < texts.length; i++) {
+                texts[i].textContent = e.target.value;
             }
-            let banners = document.getElementsByClassName("bannerText");
-            for (let i = 0; i < banners.length; i++) {
-                banners[i].ondraw = pixel_process;
+        }
+
+        const numberBox = document.getElementById("letter-spacing");
+        numberBox.addEventListener("input", updateLetterSpacing);
+
+        function updateLetterSpacing(e) {
+            let texts = document.getElementsByClassName("bannerText");
+            for (var i = 0; i < texts.length; i++) {
+                texts[i].setAttribute("letter-spacing", e.target.value);
+                texts[i].update_texture();
             }
+        }
 
-            const input = document.getElementById("text");
-            input.addEventListener("input", updateValue);
+        const defaultFont = document.getElementById("default-font");
+        defaultFont.addEventListener("ready", function () {
+            const colorTables = defaultFont.colors();
+            for (let i = 0; i < colorTables.length; i++) {
+                const table = colorTables[i];
+                const tableDiv = document.createElement("div");
+                tableDiv.textContent = `Color Table ${i}:`;
+                for (let j = 0; j < table.length; j++) {
+                    const color = table[j];
+                    let colorInput = document.createElement("input");
+                    colorInput.type = "color";
+                    colorInput.value = color;
 
-            function updateValue(e) {
-                let texts =
-                    document.getElementsByClassName("output")[0].children;
-                for (var i = 0; i < texts.length; i++) {
-                    texts[i].textContent = e.target.value;
+                    tableDiv.colorTableIndex = i;
+                    colorInput.colorIndex = j;
+
+                    tableDiv.addEventListener("input", function (e) {
+                        const hexColor = e.target.value;
+                        const tableIndex = this.colorTableIndex;
+                        const colorIndex = e.target.colorIndex;
+                        defaultFont.set_color(tableIndex, colorIndex, hexColor);
+
+                        let banners = document.getElementsByClassName("bannerText");
+                        for (let i = 0; i < banners.length; i++) {
+                            banners[i].update_texture();
+                        }
+                    });
+
+                    tableDiv.appendChild(colorInput);
                 }
+                document
+                    .getElementById("color-tables-div")
+                    .appendChild(tableDiv);
             }
+        });
+    </script>
+</body>
 
-            const numberBox = document.getElementById("letter-spacing");
-            numberBox.addEventListener("input", updateLetterSpacing);
-
-            function updateLetterSpacing(e) {
-                let texts = document.getElementsByClassName("bannerText");
-                for (var i = 0; i < texts.length; i++) {
-                    texts[i].setAttribute("letter-spacing", e.target.value);
-                    texts[i].update_texture();
-                }
-            }
-
-            const picker1 = document.getElementById("primary-color");
-            picker1.addEventListener("change", updateColor);
-
-            const picker2 = document.getElementById("secondary-color");
-            picker2.addEventListener("change", updateColor);
-            function updateColor(e) {
-                const color = e.target.value;
-                const r = parseInt(color.substr(1, 2), 16);
-                const g = parseInt(color.substr(3, 2), 16);
-                const b = parseInt(color.substr(5, 2), 16);
-                if (e.target.id === "primary-color") {
-                    primaryColor = [r, g, b, 255];
-                }
-                if (e.target.id === "secondary-color") {
-                    secondaryColor = [r, g, b, 255];
-                }
-                let banners = document.getElementsByClassName("bannerText");
-                for (let i = 0; i < banners.length; i++) {
-                    banners[i].update_texture();
-                }
-            }
-        </script>
-    </body>
 </html>

@@ -21,6 +21,13 @@ export class PrintSocket {
     set text(value: string);
 }
 
+export class TableEntry {
+    private constructor();
+    free(): void;
+    [Symbol.dispose](): void;
+    colors: string[];
+}
+
 export class Texture {
     free(): void;
     [Symbol.dispose](): void;
@@ -30,6 +37,8 @@ export class Texture {
     width: number;
 }
 
+export function get_printer_colors(layout_name: string): TableEntry[];
+
 export function load_layout_from_file(layout_name: string, layout_bytes: Uint8Array, _default: boolean): string;
 
 export function loaded(): boolean;
@@ -37,3 +46,5 @@ export function loaded(): boolean;
 export function print_badge(socket: BadgeSocket): Texture;
 
 export function print_text(socket: PrintSocket): Texture;
+
+export function set_printer_color(layout_name: string, table_index: number, color_index: number, hex_color: string): void;
